@@ -28,18 +28,18 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private TokenService tokenService;
+     private TokenService tokenService;
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody LoginRequestDTO body) {
         User user = repository.findByEmail(body.email()).orElseThrow(() -> new RuntimeException("User not found"));
 
         // onde as senhas sao comparadas
-        if (passwordEncoder.matches(user.getPassword(), body.password())) {
+        if (passwordEncoder.matches(body.password(), user.getPassword())) {
             String token = tokenService.generateToken(user);
             return ResponseEntity.ok(new ResponseDTO(user.getName(), token));
         }
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.status(401).build();
     }
 
     @PostMapping("/register")
