@@ -4,9 +4,10 @@ import kipper.login_auth_api.domain.user.User;
 import kipper.login_auth_api.dto.LoginRequestDTO;
 import kipper.login_auth_api.dto.RegisterRequestDTO;
 import kipper.login_auth_api.dto.ResponseDTO;
+import kipper.login_auth_api.exceptions.InvalidEmailException;
+import kipper.login_auth_api.exceptions.InvalidPasswordException;
 import kipper.login_auth_api.infra.security.TokenService;
 import kipper.login_auth_api.repositories.UserRepository;
-import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,14 +33,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody LoginRequestDTO body) {
-        User user = repository.findByEmail(body.email()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = repository.findByEmail(body.email()).orElseThrow(InvalidEmailException::new);
 
         // onde as senhas sao comparadas
         if (passwordEncoder.matches(body.password(), user.getPassword())) {
             String token = tokenService.generateToken(user);
             return ResponseEntity.ok(new ResponseDTO(user.getName(), token));
         }
-        return ResponseEntity.status(401).build();
+        throw new InvalidPasswordException();
     }
 
     @PostMapping("/register")
